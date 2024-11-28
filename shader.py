@@ -136,8 +136,8 @@ class Perlin:
         self.px_to_adjusted_distance = [
             [dict() for _ in range(img_width)] for _ in range(img_height)
         ]
-        for col_edge in range(0, self.num_edges_per_row - 1):
-            for row_edge in range(0, self.num_edges_per_col - 1):
+        for col_edge in range(0, self.num_edges_per_row):
+            for row_edge in range(0, self.num_edges_per_col):
                 edge = self.edges[row_edge, col_edge]
                 col_start = max(0, edge.pos.x - self.area_size)
                 col_end = min(img_width, edge.pos.x + self.area_size)
@@ -163,9 +163,6 @@ class Perlin:
     ):
         for col in range(edge_dl.pos.x, edge_dr.pos.x):
             for row in range(edge_dl.pos.y, edge_ul.pos.y):
-                # TODO: Remove limit
-                if row > 200 or col > 600:
-                    continue
                 pos = float2(col, row)
                 contribution_dl = clamp(self.edge_contribution(pos, edge_dl), -1.0, 1.0)
                 contribution_ul = clamp(self.edge_contribution(pos, edge_ul), -1.0, 1.0)
