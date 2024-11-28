@@ -4,6 +4,7 @@ import time
 from dataclasses import dataclass
 from typing import Self
 from multiprocessing import Process, Manager, Value, RawArray, Pool
+from itertools import count
 
 
 def clamp(val: float, val_min: float, val_max: float) -> float:
@@ -90,13 +91,16 @@ class float2:
 
 
 class Edge:
+    id: int
     angle = 0.0
     pos: float2
+    _ids = count(0)
 
     def __init__(self, pos: float2):
         rand = np.random.default_rng()
         self.angle = rand.random() * 2 * np.pi
         self.pos = pos
+        self.id = next(self._ids)
 
 
 class Perlin:
@@ -104,6 +108,7 @@ class Perlin:
     num_edges_per_row: int = 0
     num_edges_per_col: int = 0
     area_size: int = 0
+    px_to_angle: any
 
     def __init__(self):
         pass
@@ -124,35 +129,24 @@ class Perlin:
             for row_edge in range(0, self.num_edges_per_col):
                 cur_pos_y = row_edge * self.area_size
                 self.edges[row_edge, col_edge] = Edge(float2(cur_pos_x, cur_pos_y))
+        self.px_to_angle = [
+            [dict() for _ in range(img_width)] for _ in range(img_height)
+        ]
+        for col_edge in range(0, self.num_edges_per_row - 1):
+            for row_edge in range(0, self.num_edges_per_col - 1):
+                edge = self.edges[row_edge, col_edge]
+                col_start = max(0, edge.pos.x - self.area_size)
+                col_end = min(img_width, edge.pos.x + self.area_size)
+                for col in range(col_start, col_end):
+                    row_start = max(0, edge.pos.y - self.area_size)
+                    row_end = min(img_height, edge.pos.y + self.area_size)
+                    for row in range(row_start, row_end):
+                        self.px_to_angle[row][col][edge.id] = np.atan2(
+                            row - edge.pos.y, col - edge.pos.x
+                        )
 
     def edge_contribution(self, pos: float2, edge: Edge):
-        # TODO: Improve
-
-        # auto dist_norm = distance(edge->pos, pos) / edge_spacing_px;
-        # auto right = float2(1, 0);
-        # auto v = pos - edge->pos;
-        # auto cross_prod = cross(float3(v, 0), float3(right, 1));
-        # auto is_inward = cross_prod.z < 0.0f;
-        # auto cos_angle = dot(v, right) / length(v);
-        # auto angle_from_edge = std::acosf(cos_angle);
-        # if (!is_inward) {
-        # 	angle_from_edge = 2.0f * pi_f - angle_from_edge;
-        # }
-
-        v = pos - edge.pos
-        if float2.length(v) == 0:
-            return 0
-
-        right = float2(1, 0)
-        cross_prod = float3.cross(float3(v.x, v.y, 0), float3(right.x, right.y, 0))
-        is_inward = cross_prod.z < 0.0
-        cos_angle = float2.dot(v, right) / float2.length(v)
-        angle_from_edge = np.acos(cos_angle)
-        if not is_inward:
-            angle_from_edge = 2.0 * np.pi - angle_from_edge
-
-        angle_from_edge = np.atan2(pos.y - edge.pos.y, pos.x - edge.pos.x)
-        # angle_pos = pos.angle(edge.pos)
+        angle_from_edge = self.px_to_angle[pos.y][pos.x][edge.id]
         angle_diff = abs(angle_from_edge - edge.angle)
         return np.cos(angle_diff) * float2.distance(pos, edge.pos) / self.area_size
 
