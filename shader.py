@@ -52,23 +52,8 @@ class float2:
             else:
                 return 3 * np.pi / 2
 
-        # auto dist_norm = distance(edge->pos, pos) / edge_spacing_px;
-        # auto right = float2(1, 0);
-        # auto v = pos - edge->pos;
-        # auto cross_prod = cross(float3(v, 0), float3(right, 1));
-        # auto is_inward = cross_prod.z < 0.0f;
-        # auto cos_angle = dot(v, right) / length(v);
-        # auto angle_from_edge = std::acosf(cos_angle);
-        # if (!is_inward) {
-        # 	angle_from_edge = 2.0f * pi_f - angle_from_edge;
-        # }
-
         v2 = float2.norm(other - self)
-        angle: float = 0
-        if self.y > other.y:
-            angle = np.acos(v2.x)
-        else:
-            angle = np.acos(v2.x)  # np.pi + np.acos(-v2.x)
+        angle = np.acos(v2.x)
         return angle
 
     @staticmethod
