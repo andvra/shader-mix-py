@@ -110,6 +110,7 @@ class Perlin:
     area_size: int = 0
     px_to_angle: any
     px_to_adjusted_distance: any
+    show_borders: bool = False
 
     def __init__(self):
         pass
@@ -117,8 +118,9 @@ class Perlin:
     def smooth(self, t: float) -> float:
         return ((6 * t - 15) * t + 10) * t * t * t
 
-    def prepare(self, img_width, img_height):
-        self.area_size = 100
+    def prepare(self, img_width, img_height, area_size, show_borders):
+        self.show_borders = show_borders
+        self.area_size = area_size
         self.num_edges_per_row = img_width // self.area_size + 1
         self.num_edges_per_col = img_height // self.area_size + 1
         print(f"Edges per row/col: {self.num_edges_per_row}/{self.num_edges_per_col}")
@@ -172,7 +174,7 @@ class Perlin:
                 tx = (pos.x - edge_dl.pos.x) / self.area_size
                 ty = (pos.y - edge_dl.pos.y) / self.area_size
 
-                if tx < 0.01 or ty < 0.01:
+                if self.show_borders and (tx < 0.01 or ty < 0.01):
                     img[row, col, 1] = 1.0
                     continue
 
@@ -201,15 +203,15 @@ class Perlin:
     def move(self):
         for col_edge in range(0, self.num_edges_per_row):
             for row_edge in range(0, self.num_edges_per_col):
-                self.edges[row_edge, col_edge].angle += 0.1
+                self.edges[row_edge, col_edge].angle += 0.5
 
 
 def run():
-    img_width = 800
-    img_height = 600
+    img_width = 400
+    img_height = 300
 
     perlin = Perlin()
-    perlin.prepare(img_width, img_height)
+    perlin.prepare(img_width, img_height, 50, False)
 
     img = np.zeros((img_height, img_width, 3), np.float32)
     window_name = "Some title goes here"
@@ -235,28 +237,5 @@ def run():
             done = True
 
 
-def run_test_inner(some_var, idx):
-    some_var[idx] = idx
-
-
-def run_test():
-    pass
-    # the_array = np.ndarray(10, np.float32)
-    # some_var = RawArray("d", 10)
-    # some_var_np = np.frombuffer(some_var)
-    # np.copyto(some_var_np, the_array)
-    # with Pool(processes=4) as pool:
-    #     res = pool.map(run_test_inner, 10)
-    #     print(res)
-    # processes = []
-    # for idx in range(10):
-    #     processes.append(Process(target=run_test_inner, args=(some_var, idx)).start())
-
-    # for p in processes:
-    #     p.join()
-    # print(the_array)
-
-
 if __name__ == "__main__":
-    # run_test()
     run()
