@@ -220,7 +220,7 @@ def run():
     frame_count = 0
     t_fps = time.time()
     while not done:
-        # perlin.move()
+        perlin.move()
         perlin.render(img)
         cv2.imshow(window_name, img)
         frame_count += 1
