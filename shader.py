@@ -109,6 +109,7 @@ class Perlin:
     num_edges_per_col: int = 0
     area_size: int = 0
     px_to_angle: any
+    px_to_adjusted_distance: any
 
     def __init__(self):
         pass
@@ -132,6 +133,9 @@ class Perlin:
         self.px_to_angle = [
             [dict() for _ in range(img_width)] for _ in range(img_height)
         ]
+        self.px_to_adjusted_distance = [
+            [dict() for _ in range(img_width)] for _ in range(img_height)
+        ]
         for col_edge in range(0, self.num_edges_per_row - 1):
             for row_edge in range(0, self.num_edges_per_col - 1):
                 edge = self.edges[row_edge, col_edge]
@@ -144,11 +148,15 @@ class Perlin:
                         self.px_to_angle[row][col][edge.id] = np.atan2(
                             row - edge.pos.y, col - edge.pos.x
                         )
+                        self.px_to_adjusted_distance[row][col][edge.id] = (
+                            float2.distance(edge.pos, float2(col, row)) / self.area_size
+                        )
 
     def edge_contribution(self, pos: float2, edge: Edge):
         angle_from_edge = self.px_to_angle[pos.y][pos.x][edge.id]
         angle_diff = abs(angle_from_edge - edge.angle)
-        return np.cos(angle_diff) * float2.distance(pos, edge.pos) / self.area_size
+        distance = self.px_to_adjusted_distance[pos.y][pos.x][edge.id]
+        return np.cos(angle_diff) * distance
 
     def render_within_area(
         self, img, edge_dl: Edge, edge_ul: Edge, edge_ur: Edge, edge_dr: Edge
